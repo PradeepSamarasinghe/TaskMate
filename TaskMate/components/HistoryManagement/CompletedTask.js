@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-
-const CompletedTask = () => {
+const CompletedTask = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('Completed');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Sample task data
   const tasks = [
-    { id: 1, title: 'Design Changes', completed: 5, total: 5, isCompleted: true },
-    { id: 2, title: 'Design Changes', completed: 5, total: 5, isCompleted: true },
-    { id: 3, title: 'Design Changes', completed: 8, total: 8, isCompleted: true },
-    { id: 4, title: 'Design Changes', completed: 20, total: 20, isCompleted: true },
-    { id: 5, title: 'Design Changes', completed: 8, total: 8, isCompleted: true },
+    { id: 1, title: 'Code Review', completed: 10, total: 10, isCompleted: true },
+    { id: 2, title: 'UI Design Updates', completed: 4, total: 5, isCompleted: false },
+    { id: 3, title: 'Backend Optimization', completed: 7, total: 7, isCompleted: true },
+    { id: 4, title: 'Team Meeting', completed: 1, total: 1, isCompleted: true },
+    { id: 5, title: 'Write Documentation', completed: 3, total: 6, isCompleted: false },
+    { id: 6, title: 'Fix Login Issue', completed: 2, total: 2, isCompleted: true },
+    { id: 7, title: 'Add New Feature', completed: 5, total: 8, isCompleted: false },
+    { id: 8, title: 'Client Presentation', completed: 1, total: 1, isCompleted: true },
+    { id: 9, title: 'Database Migration', completed: 6, total: 6, isCompleted: true },
+    { id: 10, title: 'Bug Fix Sprint', completed: 9, total: 10, isCompleted: false },
   ];
+  
 
   // Filter tasks based on search query
   const filteredTasks = tasks.filter(task =>
@@ -30,10 +35,6 @@ const CompletedTask = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with time */}
-      <View style={styles.header}>
-        <Text style={styles.time}>9:41</Text>
-      </View>
 
       {/* Stats section */}
       <View style={styles.statsContainer}>
@@ -74,7 +75,9 @@ const CompletedTask = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabButton, activeTab === 'Goals' && styles.activeTab]}
-          onPress={() => setActiveTab('Goals')}
+          onPress={() => { setActiveTab('Goals');
+            navigation.navigate('Goals');
+          }}
         >
           <Text style={[styles.tabText, activeTab === 'Goals' && styles.activeTabText]}>
             Goals
@@ -93,31 +96,13 @@ const CompletedTask = () => {
               </Text>
             </View>
             <View style={styles.taskCheckbox}>
-              <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+              <Ionicons name="checkmark-circle" size={24} color="#4685FF" />
             </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Bottom navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home" size={24} color="#666" />
-          <Text style={styles.navText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar" size={24} color="#666" />
-          <Text style={styles.navText}>Calendar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="time" size={24} color="#666" />
-          <Text style={styles.navText}>History</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person" size={24} color="#666" />
-          <Text style={styles.navText}>Profile</Text>
-        </TouchableOpacity>
-      </View>
+      
     </View>
   );
 };
@@ -186,14 +171,14 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#4CAF50',
+    borderBottomColor: '#4685FF',
   },
   tabText: {
     fontSize: 16,
     color: '#666',
   },
   activeTabText: {
-    color: '#4CAF50',
+    color: '#4685FF',
     fontWeight: 'bold',
   },
   taskList: {
