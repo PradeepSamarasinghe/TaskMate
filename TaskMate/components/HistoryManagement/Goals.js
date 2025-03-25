@@ -1,207 +1,334 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList, Modal, TextInput, Alert } from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { Client, Databases } from 'appwrite';
 
-const GoalsScreen = ({ navigation }) => {
-  const [activeTab, setActiveTab] = useState('Goals');
+const client = new Client()
+  .setEndpoint("https://cloud.appwrite.io/v1")
+  .setProject("67d2d4400029f32f7259");
 
-  // State for goals data
-  const [goals, setGoals] = useState({
-    daily: { completed: 6, total: 8 },
-    weekly: { completed: 24, total: 30 },
-  });
+const databases = new Databases(client);
 
-  // State for completed tasks
-  const [completedTasks, setCompletedTasks] = useState([
-    { id: 1, title: 'Design Changes', completed: 5, total: 5 },
-    { id: 2, title: 'Bug Fixes', completed: 3, total: 3 },
-    { id: 3, title: 'Meeting Preparation', completed: 4, total: 4 },
-  ]);
+const GoalsScreen = () => {
+  const [goals, setGoals] = useState([]);
+  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const navigation = useNavigation();
 
-  // State for achievements
-  const [achievements, setAchievements] = useState([
-    { id: 1, title: 'Productivity Master', description: 'Completed all daily tasks for 7 days straight' },
-    { id: 2, title: 'Goal Crusher', description: 'Exceeded weekly goal by 120%' },
-  ]);
+  // Fetch Goals
+  const fetchGoals = async () => {
+    try {
+      const response = await databases.listDocuments(
+        "67de6cb1003c63a59683",
+        "67e16137002384116add"
+      );
+      setGoals(response.documents);
+    } catch (error) {
+      console.error("Error fetching goals:", error);
+    }
+  };
+
+  // Delete Goal
+  const deleteGoal = async (goalId) => {
+    try {
+      await databases.deleteDocument(
+        "67de6cb1003c63a59683",
+        "67e16137002384116add",
+        goalId
+      );
+      setGoals(goals.filter(goal => goal.$id !== goalId));
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+    }
+  };
+
+  // Open Edit Modal
+  const openEditModal = (goal) => {
+    setSelectedGoal(goal);
+    setModalVisible(true);
+  };
+
+  // Update Goal
+  const updateGoal = async () => {
+    if (!selectedGoal.GoalName.trim()) {
+      Alert.alert("Error", "Goal name cannot be empty");
+      return;
+    }
+    try {
+      await databases.updateDocument(
+        "67de6cb1003c63a59683",
+        "67e16137002384116add",
+        selectedGoal.$id,
+        {
+          GoalName: selectedGoal.GoalName,
+          TimeFrame: selectedGoal.TimeFrame,
+          GoalNote: selectedGoal.GoalNote,
+        }
+      );
+      fetchGoals(); // Refresh goals list
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Error updating goal:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchGoals();
+  }, []);
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={24} color="black" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Your Goals</Text>
-        <TouchableOpacity
-  style={[styles.addGoalButton, activeTab === 'SetGoals' && styles.activeTab]}
-  onPress={() => navigation.navigate('SetGoals')}
->
-  <Ionicons name="add-circle" size={28} color="#4CAF50" />
-</TouchableOpacity>
+        <TouchableOpacity style={styles.addGoalButton} onPress={() => navigation.navigate('SetGoals')}>
+          <Text style={styles.addGoalText}>+ Add Goal</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Tab navigation */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'Completed' && styles.activeTab]}
-          onPress={() => {
-            setActiveTab('Completed');
-            navigation.navigate('CompletedTask');
-          }}
-        >
-          <Text style={[styles.tabText, activeTab === 'Completed' && styles.activeTabText]}>Completed</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'Goals' && styles.activeTab]}
-          onPress={() => setActiveTab('Goals')}
-        >
-          <Text style={[styles.tabText, activeTab === 'Goals' && styles.activeTabText]}>Goals</Text>
-        </TouchableOpacity>
-
-
+      {/* Goals Overview */}
+      <View style={styles.goalSummaryContainer}>
+        <View style={styles.goalCard}>
+          <Text style={styles.goalCardTitle}>Daily Goal</Text>
+          <Text style={styles.goalProgress}>6/8</Text>
+          <Text style={styles.goalSubtext}>Tasks completed</Text>
+        </View>
+        <View style={styles.goalCard}>
+          <Text style={styles.goalCardTitle}>Weekly Goal</Text>
+          <Text style={styles.goalProgress}>24/30</Text>
+          <Text style={styles.goalSubtext}>Tasks completed</Text>
+        </View>
       </View>
 
+      {/* Goal List */}
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Goals Section (Now Horizontal) */}
-        <View style={styles.goalSection}>
-          <View style={styles.goalContainer}>
-            <Text style={styles.goalTitle}>Daily Goal</Text>
-            <Text style={styles.goalProgress}>{goals.daily.completed}/{goals.daily.total}</Text>
-            <Text style={styles.goalLabel}>Tasks completed</Text>
-          </View>
-
-          <View style={styles.goalContainer}>
-            <Text style={styles.goalTitle}>Weekly Goal</Text>
-            <Text style={styles.goalProgress}>{goals.weekly.completed}/{goals.weekly.total}</Text>
-            <Text style={styles.goalLabel}>Tasks completed</Text>
-          </View>
-        </View>
-
-        {/* Completed Tasks Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Completed Tasks</Text>
-          {completedTasks.map(task => (
-            <View key={task.id} style={styles.taskItem}>
-              <Text style={styles.taskTitle}>{task.title}</Text>
-              <View style={styles.taskCompletion}>
-                <Text style={styles.taskCompletedText}>{task.completed}/{task.total} Completed</Text>
-                <Ionicons name="checkmark-circle" size={20} color="#4685FF" />
+        <FlatList
+          data={goals}
+          keyExtractor={(item) => item.$id}
+          renderItem={({ item }) => (
+            <View style={styles.goalItem}>
+              <Ionicons name="calendar" size={24} color="#6A5AE0" style={styles.goalIcon} />
+              <View style={styles.goalTextContainer}>
+                <Text style={styles.goalTitle}>{item.GoalName}</Text>
+                <Text style={styles.goalDetails}>Timeframe: {item.TimeFrame}</Text>
+                <Text style={styles.goalDetails}>Note: {item.GoalNote}</Text>
               </View>
+              <TouchableOpacity onPress={() => openEditModal(item)}>
+                <MaterialIcons name="edit" size={20} color="black" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => deleteGoal(item.$id)}>
+                <MaterialIcons name="delete" size={20} color="red" />
+              </TouchableOpacity>
             </View>
-          ))}
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* Achievements Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionSubtitle}>Recent Achievements</Text>
-          {achievements.map(achievement => (
-            <View key={achievement.id} style={styles.achievementItem}>
-              <Text style={styles.achievementTitle}>{achievement.title}</Text>
-              <Text style={styles.achievementDescription}>{achievement.description}</Text>
-            </View>
-          ))}
-        </View>
+          )}
+        />
       </ScrollView>
+
+      {/* Update Goal Modal */}
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Goal</Text>
+            <TextInput
+              style={styles.input}
+              value={selectedGoal?.GoalName}
+              onChangeText={(text) => setSelectedGoal({ ...selectedGoal, GoalName: text })}
+              placeholder="Goal Name"
+            />
+            <TextInput
+              style={styles.input}
+              value={selectedGoal?.TimeFrame}
+              onChangeText={(text) => setSelectedGoal({ ...selectedGoal, TimeFrame: text })}
+              placeholder="Timeframe"
+            />
+            <TextInput
+              style={styles.input}
+              value={selectedGoal?.GoalNote}
+              onChangeText={(text) => setSelectedGoal({ ...selectedGoal, GoalNote: text })}
+              placeholder="Goal Note"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={updateGoal} style={styles.saveButton}>
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelButton}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 40,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  addGoalButton: {
-    padding: 10,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    marginHorizontal: 20,
-    margin:15,
-  },
-  tabButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-  },
-  activeTab: {
-    borderBottomColor: '#4685FF',
-    borderBottomWidth: 2,
-  },
-  tabText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  activeTabText: {
-    color: '#4685FF',
-    fontWeight: 'bold',
-  },
-  goalSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    margin:10,//Goal section margin
-    marginBottom: 25,
-  },
-  goalContainer: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 25,
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  goalTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  goalProgress: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#4685FF',
-  },
-  goalLabel: {
-    fontSize: 14,
-    color: '#666',
-
-  },
-  taskItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    margin:10,
-  },
-  taskTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  achievementItem: {
-    marginLeft:10,
-    marginRight:10,
-    marginBottom: 15,
-  },
-  achievementTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    
-  },
-});
+    container: {
+      flex: 1,
+      backgroundColor: '#F8FAFC',
+      paddingTop: 20,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      backgroundColor: '#fffff',
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+    },
+    headerTitle: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: '#101010',
+    },
+    addGoalButton: {
+      backgroundColor: '#FF8C42',
+      padding: 12,
+      borderRadius: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    addGoalText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    goalSummaryContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginVertical: 20,
+    },
+    goalCard: {
+      backgroundColor: '#fff',
+      padding: 20,
+      borderRadius: 15,
+      alignItems: 'center',
+      width: '40%',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 5,
+    },
+    goalCardTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#3567D4',
+    },
+    goalProgress: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: '#28A745',
+    },
+    goalSubtext: {
+      fontSize: 14,
+      color: '#555',
+    },
+    goalItem: {
+      flexDirection: 'row',
+      backgroundColor: '#fff',
+      padding: 20,
+      borderRadius: 12,
+      marginBottom: 15,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    goalTextContainer: {
+      flex: 1,
+      paddingLeft: 10,
+    },
+    goalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#333',
+    },
+    goalDetails: {
+      fontSize: 14,
+      color: '#555',
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContent: {
+      width: '85%',
+      backgroundColor: '#fff',
+      padding: 30,
+      borderRadius: 15,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 5,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: 20,
+      color: '#333',
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: '#ccc',
+      padding: 12,
+      borderRadius: 10,
+      marginBottom: 15,
+      fontSize: 16,
+      backgroundColor: '#f9f9f9',
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 20,
+    },
+    saveButton: {
+      backgroundColor: '#4CAF50',
+      paddingVertical: 12,
+      paddingHorizontal: 30,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 5,
+    },
+    cancelButton: {
+      backgroundColor: '#FF5733',
+      paddingVertical: 12,
+      paddingHorizontal: 30,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 5,
+    },
+    buttonText: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+  });
+  
 
 export default GoalsScreen;
