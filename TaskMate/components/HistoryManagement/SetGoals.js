@@ -26,10 +26,11 @@ const SetGoalsScreen = () => {
   const [open, setOpen] = useState(false);
   const [timeFrame, setTimeFrame] = useState(null);
   const [items, setItems] = useState([
+    { label: "1 Day", value: "1_day" },
     { label: "1 Week", value: "1_week" },
     { label: "1 Month", value: "1_month" },
     { label: "3 Months", value: "3_months" },
-    { label: "1 Year", value: "1_year" },
+    
   ]);
   const [goals, setGoals] = useState([]);
 

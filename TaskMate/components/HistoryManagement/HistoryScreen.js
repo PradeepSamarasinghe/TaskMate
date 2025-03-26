@@ -3,14 +3,12 @@ import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native
 import { ProgressChart } from "react-native-chart-kit";
 import { useTheme } from "../ThemeContext";
 import { Picker } from "@react-native-picker/picker";
-import TopBar from "../MenuBars/TopBar"; // Importing the new TopBar
-
-// Navigation setup
+import TopBar from "../MenuBars/TopBar";
 import { useNavigation } from '@react-navigation/native';
 
 const HistoryScreen = () => {
   const { theme } = useTheme();
-  const navigation = useNavigation();  // Hook for navigation
+  const navigation = useNavigation();
   const [selectedTab, setSelectedTab] = useState("To Do");
   const [selectedPeriod, setSelectedPeriod] = useState("Monthly");
 
@@ -39,7 +37,7 @@ const HistoryScreen = () => {
   );
 
   const navigateToCompleted = () => {
-    navigation.navigate("CompletedTask");  // Navigate to CompletedTask page
+    navigation.navigate("CompletedTask");
   };
 
   return (
@@ -62,19 +60,6 @@ const HistoryScreen = () => {
         <Text style={styles.progressText}>78%</Text>
       </View>
 
-      {/* Container for Picker in top-right corner */}
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={selectedPeriod}
-          onValueChange={(itemValue) => setSelectedPeriod(itemValue)}
-          style={styles.picker}
-        >
-          <Picker.Item label="Daily" value="Daily" />
-          <Picker.Item label="Weekly" value="Weekly" />
-          <Picker.Item label="Monthly" value="Monthly" />
-        </Picker>
-      </View>
-
       <View style={styles.tabs}>
         {["To Do", "In Progress", "Completed"].map((tab) => (
           <TouchableOpacity
@@ -87,9 +72,22 @@ const HistoryScreen = () => {
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>{selectedPeriod} Tasks</Text>
+      {/* Section Title with Dropdown */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{selectedPeriod} Tasks</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={selectedPeriod}
+            onValueChange={(itemValue) => setSelectedPeriod(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Daily" value="Daily" />
+            <Picker.Item label="Weekly" value="Weekly" />
+            <Picker.Item label="Monthly" value="Monthly" />
+          </Picker>
+        </View>
+      </View>
 
-      {/* "View All" Button for Completed Tasks */}
       {selectedTab === "Completed" && (
         <TouchableOpacity style={styles.viewAllButton} onPress={navigateToCompleted}>
           <Text style={styles.viewAllText}>View All Completed Tasks</Text>
@@ -112,39 +110,56 @@ const styles = StyleSheet.create({
   darkContainer: { backgroundColor: "#121212" },
   progressContainer: { alignItems: "center", marginVertical: 20 },
   progressText: { fontSize: 22, fontWeight: "bold", position: "absolute", top: 60 },
+  tabs: { flexDirection: "row", justifyContent: "center", marginBottom: 15 },
+  tab: {
+    padding: 10,
+    marginHorizontal: 8,
+    borderRadius: 20,
+    backgroundColor: "#E0E0E0",
+    minWidth: 100,
+    alignItems: "center",
+  },
+  selectedTab: { backgroundColor: "#4C68FF" },
+  tabText: { fontSize: 16, color: "#333" },
+  selectedTabText: { color: "#fff", fontWeight: "bold" },
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginHorizontal: 20,
+    marginVertical: 10,
+  },
+  sectionTitle: { fontSize: 22, fontWeight: "bold" },
+
   pickerContainer: {
-    position: "absolute", // Positioning absolute to place it at the top-right
-    top: 20,
-    right: 20,
-    zIndex: 1, // Ensure it sits on top of other components
-    backgroundColor: "#fff", // Optional: adds background to dropdown for clarity
-    borderRadius: 5, // Optional: rounded corners for aesthetic
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    overflow: "hidden",
+    width: 120,
+    height: 40,
   },
   picker: {
     height: 40,
-    width: 120,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
+    width: "100%",
   },
-  tabs: { flexDirection: "row", justifyContent: "center", marginBottom: 10 },
-  tab: { padding: 10, marginHorizontal: 5, borderRadius: 15, backgroundColor: "#E0E0E0" },
-  selectedTab: { backgroundColor: "#4C68FF" },
-  tabText: { fontSize: 16, color: "#333" },
-  selectedTabText: { color: "#fff" },
-  sectionTitle: { fontSize: 22, fontWeight: "bold", marginLeft: 20, marginVertical: 10 },
+
   taskList: { paddingHorizontal: 20 },
-  taskItem: { padding: 15, backgroundColor: "#fff", borderRadius: 10, marginBottom: 10, elevation: 3 },
+  taskItem: {
+    padding: 15,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 10,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
   taskTitle: { fontSize: 16, color: "#333" },
-  viewAllButton: {
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  viewAllText: {
-    color: "#4C68FF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+  viewAllButton: { alignItems: "center", marginVertical: 10 },
+  viewAllText: { color: "#4C68FF", fontSize: 16, fontWeight: "bold" },
 });
 
 export default HistoryScreen;

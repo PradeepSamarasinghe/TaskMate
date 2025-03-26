@@ -68,6 +68,13 @@ const GoalsScreen = () => {
       );
       fetchGoals(); // Refresh goals list
       setModalVisible(false);
+      // Show toast notification
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Your Goal is Updated!",
+      });
+
     } catch (error) {
       console.error("Error updating goal:", error);
     }
@@ -95,12 +102,12 @@ const GoalsScreen = () => {
         <View style={styles.goalCard}>
           <Text style={styles.goalCardTitle}>Daily Goal</Text>
           <Text style={styles.goalProgress}>6/8</Text>
-          <Text style={styles.goalSubtext}>Tasks completed</Text>
+          <Text style={styles.goalSubtext}>Goals completed</Text>
         </View>
         <View style={styles.goalCard}>
           <Text style={styles.goalCardTitle}>Weekly Goal</Text>
           <Text style={styles.goalProgress}>24/30</Text>
-          <Text style={styles.goalSubtext}>Tasks completed</Text>
+          <Text style={styles.goalSubtext}>Goals completed</Text>
         </View>
       </View>
 
@@ -163,6 +170,8 @@ const GoalsScreen = () => {
         </View>
       </Modal>
     </View>
+
+    
   );
 };
 
@@ -298,7 +307,7 @@ const styles = StyleSheet.create({
       marginTop: 20,
     },
     saveButton: {
-      backgroundColor: '#4CAF50',
+      backgroundColor: '#2A4D9B',
       paddingVertical: 12,
       paddingHorizontal: 30,
       borderRadius: 10,
